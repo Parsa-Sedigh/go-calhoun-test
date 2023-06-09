@@ -12,6 +12,8 @@ import (
 
 func TestMain(m *testing.M) {
 	// 0. flag.Parse() if you need flags
+	// 1. setup anything you need
+
 	exitCode := run(m)
 	os.Exit(exitCode)
 }

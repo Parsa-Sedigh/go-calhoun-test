@@ -578,6 +578,54 @@ We can create a helper function for setting up things(like db), but even with th
 using that setup.
 
 ## 22-022 TestMain
+Look at `users_test.go`.
+
+The `TestMain` func is called before all of your tests are called.
+
+Note: Once this function is added to a program, your tests won't run unless you tell them to run. So if you add it and run `go test -v`,
+no test function will run. Because TestMain gets called and it's assuming that you're gonna tell it whenever you're ready to run the tests by using:
+`m.Run()` and it returns an integer which is the exit code that you're supposed to use whenever the program is done(running tests is done).
+When the TestMain(our program) is done, you should exit the program with the status code returned by m.Run() .
+
+One example for setting up stuff in TestMain is setting up stuff that are global like creating a DB, perhaps you wanna use the same DB throughout
+all of your tests.
+
+```go
+package main
+
+import "testing"
+
+func TestMain(m *testing.M) {
+	/* 0. flag.Parse() - if you need any flags provided by go testing tool or custom flags, you need to call flag.Parse() to capture
+	them*/
+	// 1. Setup anything you need
+	// 2.
+}
+```
+
+**Problem with os.Exit()**: Whenever you call os.Exit() , it's gonna stop the program immediately and it returns that exit code to whatever
+was calling that binary or whatever is running the program and the deferred function calls are **not** going to be called.
+If you really want to run those deferred functions, the solution is to not use the defer keyword(and probably you should rearrange them and move
+them to the end of the function as well).
+
+To avoid not being able to use `defer`, just move the code that has `defer` into another function so that there is no `defer` in the function that has
+`os.Exit()` .
+
+So create a func named `setup` or `run` that returns `m.Run()` in that func. So because we're not calling `os.Exit()` inside of `run` func,
+we can use defer there.
+
+Some tools like CI tools might use exit codes to determine whether or not tests were successful or not. 
+
+### When to use TestMain
+Whenever you have sth like DB creation or anything that your really think needs to be done before **all** of your tests could run. Note
+that you can still create setup and helper funcs and call them before each individual test.
+
+One example for doing the same run and teardown for each test is removing some data from tables of DB like removing an email from the 
+email column which is unique after each test. If we don't do this, the later tests could insert that email again and we will get an error
+and a failed test because we already had that email from previous test. So it makes sense in this case to do setup and teardown before each
+individual test.
+
 ## 23-023 Running tests in parallel
+
 ## 24-024 Parallel subtests
 ## 25-025 Setup and teardown with parallel subtests
