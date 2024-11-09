@@ -11,13 +11,16 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// 0. flag.Parse() if you need flags
+	// typical things that are done when using TestMain func:
+	// 0. flag.Parse() if you need flags(global vars or ... like setting up the same DB so that it can be used in all of tests)
 	// 1. setup anything you need
 
+	// moved the logic into another func named run() since we have a os.Exit() here.
 	exitCode := run(m)
 	os.Exit(exitCode)
 }
 
+// this func could also be called `setup`
 func run(m *testing.M) int {
 	const (
 		dropDB          = `DROP DATABASE IF EXISTS test_user_store;`
@@ -33,16 +36,19 @@ func run(m *testing.M) int {
 	if err != nil {
 		panic(fmt.Errorf("sql.Open() err = %s", err))
 	}
+
 	defer psql.Close()
 
 	_, err = psql.Exec(dropDB)
 	if err != nil {
 		panic(fmt.Errorf("psql.Exec() err = %s", err))
 	}
+
 	_, err = psql.Exec(createDB)
 	if err != nil {
 		panic(fmt.Errorf("psql.Exec() err = %s", err))
 	}
+
 	// teardown
 	defer func() {
 		_, err = psql.Exec(dropDB)
@@ -55,7 +61,9 @@ func run(m *testing.M) int {
 	if err != nil {
 		panic(fmt.Errorf("sql.Open() err = %s", err))
 	}
+
 	defer db.Close()
+
 	_, err = db.Exec(createUserTable)
 	if err != nil {
 		panic(fmt.Errorf("db.Exec() err = %s", err))

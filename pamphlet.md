@@ -80,7 +80,7 @@ How are we gonna name our variables in a testcase?
 
 When calling the function you're testing, the result should be stored in a variable called `got` or `actual`.
 
-Also we store whatever we **want** or we **expect**, in a variable called `want` or `expected`.
+Also, we store whatever we **want** or we **expect**, in a variable called `want` or `expected`.
 
 `got` and `want` tend to be used in go because they're short.
 
@@ -89,14 +89,16 @@ Also there is the name `arg` for the variable you pass to the function that is b
 ```go
 package main
 
+import "testing"
+
 func TestColor(t *testing.T) {
 	arg := "blue"
 	want := "#0000FF"
 	got := Color(arg)
-	 
+
 	if got != want {
 		t.Errorf("Color(%q) = %q; want %q", arg, got, want)
-    }
+	}
 }
 }
 ```
@@ -578,7 +580,7 @@ We can create a helper function for setting up things(like db), but even with th
 using that setup.
 
 ## 22-022 TestMain
-Look at `users_test.go`.
+Look at `psql/users_test.go`.
 
 The `TestMain` func is called before all of your tests are called.
 
@@ -587,8 +589,8 @@ no test function will run. Because TestMain gets called and it's assuming that y
 `m.Run()` and it returns an integer which is the exit code that you're supposed to use whenever the program is done(running tests is done).
 When the TestMain(our program) is done, you should exit the program with the status code returned by m.Run() .
 
-One example for setting up stuff in TestMain is setting up stuff that are global like creating a DB, perhaps you wanna use the same DB throughout
-all of your tests.
+One example for setting up stuff in TestMain is setting up stuff that are global like creating a DB and it's tables, perhaps you wanna use the same DB throughout
+all of your tests. So that in the TestX funcs, we don't have to set up the db or ... . 
 
 ```go
 package main
@@ -608,8 +610,8 @@ was calling that binary or whatever is running the program and the deferred func
 If you really want to run those deferred functions, the solution is to not use the defer keyword(and probably you should rearrange them and move
 them to the end of the function as well).
 
-To avoid not being able to use `defer`, just move the code that has `defer` into another function so that there is no `defer` in the function that has
-`os.Exit()` .
+**To avoid not being able to use `defer`, just move the code that has `defer` into another function so that there is no `defer` in the function that has
+`os.Exit()` .**
 
 So create a func named `setup` or `run` that returns `m.Run()` in that func. So because we're not calling `os.Exit()` inside of `run` func,
 we can use defer there.
@@ -624,8 +626,3 @@ One example for doing the same run and teardown for each test is removing some d
 email column which is unique after each test. If we don't do this, the later tests could insert that email again and we will get an error
 and a failed test because we already had that email from previous test. So it makes sense in this case to do setup and teardown before each
 individual test.
-
-## 23-023 Running tests in parallel
-
-## 24-024 Parallel subtests
-## 25-025 Setup and teardown with parallel subtests
