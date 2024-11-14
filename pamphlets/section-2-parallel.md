@@ -99,4 +99,36 @@ So use parallel tests for the use cases mentioned previously.
 Most of the time your tests are gonna run fast anyway without running in parallel.
 
 ## 24-024 Parallel subtests
+`24_test.go`
+
+Subtests can also run in parallel, but they will only be run with other subtests from the same parent test in parallel.
+
+The result is:
+![](img/section-2/24-1.png)
+
+Note that there is no t.Parallel in root of TestB.
+
+So you see TestSomething and TestA get paused, then sub1 and sub2 subtests get paused, then sub1 and sub2 are continued(CONT) and
+they both run and pass(or fails) before we ever get to TestA and TestSomething.
+Note: TestB(parent of subtests) won't finish until it's subtests are finished running in parallel.
+
+This is because sub1 and sub2 will run in parallel together(why together? because they share the same parent) and when they are finished,
+all other parallel tests will continue to run.
+
+So subtests run in parallel and after they finish, other test would run.
+
+This behavior ends up with a benefit because it means we have a lot of control over which tests can and can not run in parallel together.
+
+Let's say we want all of TestB and it's subtests to run in parallel with A and Something. For this, add t.Parallel() in TestB.
+So all of the tests in that file will run in parallel.
+
+![](img/section-2/24-2.png)
+
+So all of the tests(subtests and others) will run in parallel.
+
+If we only put t.Parallel() in  root of TestB and subtests not having t.Parallel():
+![](img/section-2/24-3.png)
+
+So it's important where to put t.Parallel().
+
 ## 25-025 Setup and teardown with parallel subtests
