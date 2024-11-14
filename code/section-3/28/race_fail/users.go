@@ -7,7 +7,7 @@ import (
 )
 
 // Common errors that you will likely want to account for in your code.
-// Any other errors are wrapped with context vai the github.com/pkg/errors
+// Any other errors are wrapped with context via the github.com/pkg/errors
 // package and returned but are harder to use an if/switch to match.
 var (
 	ErrNotFound = errors.New("race: resource could not be located")
@@ -36,8 +36,10 @@ type UserStore struct {
 func (us *UserStore) Find(id int) (*User, error) {
 	const query = `SELECT id, name, email, balance FROM users WHERE id=$1;`
 	row := us.sql.QueryRow(query, id)
+
 	var user User
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Balance)
+
 	switch err {
 	case sql.ErrNoRows:
 		return nil, ErrNotFound
@@ -57,6 +59,7 @@ func (us *UserStore) Create(user *User) error {
 	if err != nil {
 		return errors.Wrap(err, "race: error creating new user")
 	}
+
 	return nil
 }
 
@@ -67,6 +70,7 @@ func (us *UserStore) Update(user *User) error {
 	if err != nil {
 		return errors.Wrap(err, "race: error updating user")
 	}
+
 	return nil
 }
 
@@ -78,6 +82,7 @@ func (us *UserStore) Delete(id int) error {
 	if err != nil {
 		return errors.Wrap(err, "race: error deleting user")
 	}
+
 	return nil
 }
 
@@ -89,6 +94,8 @@ func Spend(us interface {
 	if err != nil {
 		return err
 	}
+
 	user.Balance -= amount
+
 	return us.Update(user)
 }
