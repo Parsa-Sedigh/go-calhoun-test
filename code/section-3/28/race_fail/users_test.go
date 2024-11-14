@@ -38,10 +38,12 @@ func run(m *testing.M) int {
 	if err != nil {
 		panic(fmt.Errorf("psql.Exec() err = %s", err))
 	}
+
 	_, err = psql.Exec(createDB)
 	if err != nil {
 		panic(fmt.Errorf("psql.Exec() err = %s", err))
 	}
+
 	// teardown
 	defer func() {
 		_, err = psql.Exec(dropDB)
@@ -55,6 +57,7 @@ func run(m *testing.M) int {
 		panic(fmt.Errorf("sql.Open() err = %s", err))
 	}
 	defer db.Close()
+
 	_, err = db.Exec(createUserTable)
 	if err != nil {
 		panic(fmt.Errorf("db.Exec() err = %s", err))
@@ -68,13 +71,16 @@ type racyUserStore struct {
 	wg *sync.WaitGroup
 }
 
+// this method overrides the Find method in UserStore
 func (rus *racyUserStore) Find(id int) (*User, error) {
 	user, err := rus.UserStore.Find(id)
 	if err != nil {
 		return nil, err
 	}
+
 	rus.wg.Done()
 	rus.wg.Wait()
+
 	return user, err
 }
 
@@ -84,6 +90,7 @@ func TestSpend_race(t *testing.T) {
 		panic(fmt.Errorf("sql.Open() err = %s", err))
 	}
 	defer db.Close()
+
 	us := &UserStore{
 		sql: db,
 	}
@@ -92,10 +99,12 @@ func TestSpend_race(t *testing.T) {
 		Email:   "jon@calhoun.io",
 		Balance: 100,
 	}
+
 	err = us.Create(jon)
 	if err != nil {
 		t.Errorf("us.Create() err = %s", err)
 	}
+
 	defer func() {
 		err := us.Delete(jon.ID)
 		if err != nil {
@@ -107,23 +116,40 @@ func TestSpend_race(t *testing.T) {
 		UserStore: us,
 		wg:        &sync.WaitGroup{},
 	}
+
 	rus.wg.Add(2)
+
 	var spendWg sync.WaitGroup
+
+	// instead of a wait group, we could use a chan
+	//done := make(chan bool)
+
 	for i := 0; i < 2; i++ {
 		spendWg.Add(1)
+
 		go func() {
 			err := Spend(rus, jon.ID, 25)
 			if err != nil {
 				t.Fatalf("Spend() err = %s", err)
 			}
+
 			spendWg.Done()
+			//done <- true
 		}()
 	}
+
 	spendWg.Wait()
+
+	// don't move on until we receive two values from the done chan
+	//<-done
+	//<-done
+
 	got, err := us.Find(jon.ID)
 	if err != nil {
 		t.Fatalf("us.Find() err = %s", err)
 	}
+
+	// if it's not equal to 50, then there was a data race
 	if got.Balance != 50 {
 		t.Fatalf("user.Balance = %d; want %d", got.Balance, 50)
 	}

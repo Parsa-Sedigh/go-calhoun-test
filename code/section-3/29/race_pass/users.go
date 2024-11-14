@@ -45,6 +45,7 @@ func (pus *PsqlUserStore) Tx(fn func(us UserStore) error) error {
 	tx, err := pus.tx.Begin()
 	if err != nil {
 		tx.Rollback()
+
 		return errors.Wrap(err, "race: failed to begin transaction")
 	}
 	txStore := &PsqlUserStore{
@@ -53,6 +54,7 @@ func (pus *PsqlUserStore) Tx(fn func(us UserStore) error) error {
 	err = fn(txStore)
 	if err != nil {
 		tx.Rollback()
+
 		return err
 	}
 	err = tx.Commit()
@@ -113,15 +115,19 @@ func (pus *PsqlUserStore) Delete(id int) error {
 	return nil
 }
 
-func Spend(tx interface {
+type Transactioner interface {
 	Tx(func(UserStore) error) error
-}, userID int, amount int) error {
+}
+
+func Spend(tx Transactioner, userID int, amount int) error {
 	return tx.Tx(func(us UserStore) error {
 		user, err := us.Find(userID)
 		if err != nil {
 			return err
 		}
+
 		user.Balance -= amount
+
 		return us.Update(user)
 	})
 }
