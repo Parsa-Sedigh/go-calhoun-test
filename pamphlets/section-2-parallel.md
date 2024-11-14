@@ -132,3 +132,36 @@ If we only put t.Parallel() in  root of TestB and subtests not having t.Parallel
 So it's important where to put t.Parallel().
 
 ## 25-025 Setup and teardown with parallel subtests
+When testB runs, we get:
+![](img/section-2/25-1.png)
+
+Which is unexpected! Because teardown and even deferred teardown get run. And then parallel subtests continue and they finally are run.
+But the teardowns are already occurred!
+
+So if the setup included sth like opening up db connection or spinning up the app and defer were to close that db conn or app,
+whenever the subtests get to run, they're not gonna have the db or app to use, they're already closed!
+
+We wanna still queue those two subtests in parallel which is why `t.Run()`s has to return, otherwise go can't come down and start
+next t.Run(). We need a way to tell us when all of the subtests have finished, so we can do the teardowns. Without that,
+the t.Run()s will exit because they have t.Parallel() and we can't have a way of knowing when those tests are done, so we can start teardowns.
+
+Solution: Wrap all parallel subtests in another t.Run() but this parent t.Run() doesn't have t.Parallel() itself.
+Because the group shouldn't return(finish) until the entire group is finished running, because the group is not supposed to run in parallel,
+it's supposed to run sequentially.
+
+So whenever having setup and teardown for parallel subtests, you might have to wrap parallel subtests in another t.Run() to make sure
+that teardown happening in the way expected.
+
+## 26-026 Gotchas with closures and parallel tests
+In earlier versions of go, when you run it, you see the test names are correct(since it's not in the callback), but the callback func of subtest is using 10 as i.
+That's because we're not copying the value of i into the closure. The closure is just using the var i but that variable is incremented
+everytime the iteration of loop executes.
+
+The closures won't copy the value of i before they run and know to use that copied version. Now since all the subtests go into a queue,
+i is gonna incremented to the last value before any of them subtests get to run.
+
+**Solution: To fix any closure issue like this(typically in a for loop), copy the data into a local var and use that local var.
+As long as you're declaring and initializing the local var before t.Parallel(), it's fine. But if this solution is done after
+t.Parallel(), it won't work.**
+
+Solution 2: Create another closure. This is not preferred.
