@@ -64,10 +64,15 @@ func TestFibMemoThreadsafe_threadsafe(t *testing.T) {
 
 func benchmarkFib(b *testing.B, fib func(int) int, n int) {
 	// setup that takes some time
+	// By calling b.ResetTimer(), it ignores the lines before, which could be expensive setup,
+	// so that they won't get into the actual benchmark result
 	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		fib(n)
 	}
+
+	// with this, lines after this(which could be the teardown logic) will not get accounted into the actual benchmark result
 	b.StopTimer()
 	// teardown that takes time
 }

@@ -36,6 +36,7 @@ var (
 
 // FibMemo will calculate the Fibonacci number recursively using a pkg
 // level memo variable. This is NOT threadsafe.
+// This func is very fast but the downside is it uses a lot of memory if n is large.
 func FibMemo(n int) int {
 	if len(memo) <= n {
 		FibMemo(n - 1)                                 // make sure the memo is filled in up to n-1
