@@ -1,6 +1,7 @@
+//go:build integration
 // +build integration
 
-package skip
+package _2
 
 import "testing"
 
