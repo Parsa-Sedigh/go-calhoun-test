@@ -27,3 +27,6 @@ Test helper funcs have 4 categories:
 4. helper funcs for validating data
 
 ## 035 Generating test data
+Helper funcs for generating data.
+
+## 036 Go's testing quick package
