@@ -37,3 +37,28 @@ To account for the overflow, we can check if the params of the func are within a
 Another way is to use the `Config` options param of the `testing/quick` package.
 
 ## 037 Public testing utilities
+### Interface test suite
+We're gonna cover it later.
+
+Our test func takes `*testing.T` and the interface we wanna test and we test it regardless of the implementation. By doing this,
+we make it easy for devs to write implementations of the interface without the fear of while they satisfy the interface,
+they don't satisfy them adequately. Since we're testing the whole interface regardless of the concrete implementation.
+
+Let's say we have an interface that we wanna test. In the test, we call funcs of that interface in a reasonable order to test it.
+We don't care about the implementation of that interface. For example, we wanna test UserStore interface. We don't want to
+put the test for that in `_test` file. We put it into another package like `dbtest` package.
+
+Interface test suites are one of the common ways of exposing testing utilities publicly.
+
+```go
+package dbtest
+
+import "testing"
+
+func TestUserStore(t *testing.T, us UserStore) {
+	us.Create(...)
+	us.Find(id)
+}
+```
+
+With this func, we can pass sql implementation, monogdb and in-memory implementation both pass the test.
