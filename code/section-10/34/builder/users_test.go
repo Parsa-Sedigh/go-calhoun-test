@@ -62,16 +62,22 @@ func run(m *testing.M) int {
 	return m.Run()
 }
 
+// userStore is a helper func for building userStore. The second returned arg is the cleanup(teardown) func.
 func userStore(t *testing.T) (*UserStore, func()) {
 	t.Helper()
+
 	db, err := sql.Open("postgres", "host=localhost port=5432 user=jon sslmode=disable dbname=test_user_store")
 	if err != nil {
+		// there's no need to continue testing anymore, so call Fatalf():
 		t.Fatalf("sql.Open() err = %s", err)
+
 		return nil, nil
 	}
+
 	us := &UserStore{
 		sql: db,
 	}
+
 	return us, func() {
 		db.Close()
 	}

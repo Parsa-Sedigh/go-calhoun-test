@@ -105,10 +105,13 @@ func TestApp(t *testing.T) {
 			if err != nil {
 				t.Fatalf("http.NewRequest() err = %s", err)
 			}
+
 			app.ServeHTTP(w, r)
 			res := w.Result()
 			defer res.Body.Close()
+
 			var sb strings.Builder
+
 			io.Copy(&sb, res.Body)
 
 			for _, check := range tc.checks {

@@ -73,18 +73,14 @@ func run(m *testing.M) int {
 }
 
 func TestUserStore(t *testing.T) {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=jon sslmode=disable dbname=test_user_store")
-	if err != nil {
-		panic(fmt.Errorf("sql.Open() err = %s", err))
-	}
-	defer db.Close()
-	us := &UserStore{
-		sql: db,
-	}
+	us, teardown := userStore(t)
+	defer teardown()
+
 	t.Run("Find", testUserStore_Find(us))
 	t.Run("Create", testUserStore_Find(us))
 	t.Run("Delete", testUserStore_Find(us))
 	t.Run("Subscribe", testUserStore_Find(us))
+
 	// teardown
 }
 
@@ -120,6 +116,7 @@ func testUserStore_Find(us *UserStore) func(t *testing.T) {
 				if err != tc.wantErr {
 					t.Errorf("us.Find() err = %s", err)
 				}
+
 				if !reflect.DeepEqual(got, tc.want) {
 					t.Errorf("us.Find() = %+v, want %+v", got, tc.want)
 				}
