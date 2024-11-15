@@ -30,3 +30,10 @@ Test helper funcs have 4 categories:
 Helper funcs for generating data.
 
 ## 036 Go's testing quick package
+When you run `go test` on the 36/quick folder, you see it fails on very large numbers. We know if an integer overflows, it becomes
+a negative integer. So the test fails because of overflowing and making the result negative.
+
+To account for the overflow, we can check if the params of the func are within a certain range so they don't overflow and ... .
+Another way is to use the `Config` options param of the `testing/quick` package.
+
+## 037 Public testing utilities
