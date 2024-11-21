@@ -131,3 +131,38 @@ within that time, otherwise it will panic and it'll stop everything that's runni
 The default val for `-timeout` flag is 10m which is a very high number!We don't want that.
 
 ## 047 Parallel testing flags
+You won't use these too often.
+
+### -parallel flag
+Note: If you're using parallel tests, whenever you wanna verify that the issue with your code is not from tests running in parallel,
+consider running the tests with `-parallel=1` .
+
+With -parallel=1, even if you call t.Parallel() in multiple tests, it's only allowed 1 test to run at a time, so every test is gonna
+run sequentially.
+
+For example: you have 3 different tests that run in parallel and maybe they're all trying to create the same user in db with the
+same email address, it's hard to debug what could happen. But if you run the tests with -parallel=1, it helps you ensure
+that if all these tests pass when not running in parallel, then it's a good chance that:
+1. the reason that they're failing, is because those tests are doing sth that's causing the tests to fail when they run in parallel
+2. Or it could be somewhere in your code that it's supposed to be thread safe and it's not
+
+### -cpu flag
+A way to specify different GOMAXPROC values and run your tests to see how they compare. 
+
+```shell
+go test -cpu 1,2,4
+```
+With this command, it's gonna go through your test, **3 times**. First time, with GOMAXPROC=1, second time with GOMAXPROC=2 and then
+GOMAXPROC=4.
+
+To clean the test cache:
+```shell
+go clean -testcache
+```
+
+### -p flag
+When we run go test command, by default it's gonna run the tests for each different package and some of them might get run in parallel.
+So when two packages are running at the same time and they both trying to for example create the same DB, we don't have a way
+to prevent that. So the tests are gonna fail.
+
+One of the ways to handle this, is -p=1 to make only one program to run at the same time. Note: By default p is set to number of CPUs available.

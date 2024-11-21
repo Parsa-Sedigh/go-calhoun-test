@@ -13,6 +13,7 @@ go test -v -run TestB/group$/sub2
 ## 039 Running tests for subpackages
 Maybe you wanna only run the tests for specified packages, like packages inside of a directory.
 
+For each package in packages of current directory, do `go test "./$pkg"`.
 ```shell
 for pkg in *; do go test "./$pkg"; done
 ```
