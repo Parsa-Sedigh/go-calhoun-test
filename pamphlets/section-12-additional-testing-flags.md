@@ -125,4 +125,9 @@ We'd like to tell him: at least explain why you're not complying with our guidel
 **So code coverage is useful as a guideline, not as a rule.** By being a guideline, we can skip it where it's need to be skipped.
 
 ## 046 The timeout flag
+You wanna make sure your code is finishing it's test within a timeframe. With -timeout flag, it will make sure that your tests run
+within that time, otherwise it will panic and it'll stop everything that's running.
+
+The default val for `-timeout` flag is 10m which is a very high number!We don't want that.
+
 ## 047 Parallel testing flags
