@@ -58,6 +58,108 @@ func TestMagic(t *testing.T) {
 - they are run very fast, so we can run those everytime we hit save on the IDE to **get immediate feedback**
 
 ## 055 Integration tests
+Test how at least 2 or more systems work together.
+
+example:
+
+```go
+package main
+
+import (
+	"database/sql"
+	"testing"
+)
+
+// in this code, we rely on an external system - the DB. If we wanna unit test it, we usually mock that external system
+
+type UserStore struct {
+	db *sql.DB
+}
+
+func (us *UserStore) Create(user *User) error {
+	// ... this uses the us.db (the sql database) to create a new user entry from the user object passed in
+}
+
+/* integration tests might use a REAL database, meaning it's testing the integration of our UserStore with a real SQL DB and
+not some mocked out DB.*/
+func TestUserStore_Create(t *testing.T) {
+	
+}
+```
+
+In unit test, we would mock the external systems like DB. But in an integration test, we don't mock the external system and for example
+we actually have a real DB.
+
+When we have integration test, we have to set up things correctly, like connecting to db, make sure db has correct tables.
+
+Why the separation of unit and integration tests matter?
+
+Unit tests, especially ones with mocks, only test that another systems works as we expect it to work. Integration tests will verify that
+our expectations of how the system should work are correct.
+
+So we could have unit tests that mock dbs and report that the test passed, but since there was an error in sql query and it didn't
+run in the unit test(since it was mocked), the integration test would fail because we use the real db and won't mock it in integration.
+
+Put another way:
+> unit tests do have one major disadvantage: even if the units work well in isolation, you don't know if they work well together.
+
+https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html
+
+Eg imagine you're using a payment API and you write the following code:
+```go
+package main
+
+func main() {
+	customer := api.GetCustomer(email)
+	charge := api.CreateCharge(customer, 100)
+	
+	// now we assume the charge is successful and move on ...
+	
+	order := createOrder(...)
+	shipment := createShipment(...)
+	
+	// and then we tell our warehouse to ship the item
+}
+```
+In this case we might test our code with mocks(which we learn about later) by saying "if we call api.CreateCharge() then we can assume
+the API will work and move on".
+
+What happens if we didn't realize the API requires us to finalize a charge by calling another API before it actually deducts an amount from a user's balance?
+CreateCharge() only creates an initial row in db, we need to call another API too.
+
+Our unit tests, or any mocked tests are likely to pass, but integration tests would likely fail, because for example it would check the balance
+from the db or ... . So with integration tests, we verify that our assumptions in the unit tests were correct.
+
+Another example is when we're using stripe and we're passing wrong id(with the correct type) for an API. Now in the mocks, since we have mocked
+the call to stripes api to always return successful res, we might think our source code is correct. But then if we go read the docs or
+did integration tests which won't mock the stripe's api(in staging env of stripe OFC!), it would fail, because we're passing in
+the wrong type of id. For example, instead of passing payment source id, we're passing customer id and that customer
+doesn't have a default payment source yet.
+
+**Usual mindset: I'm testing interactions between A and B, and can't change B.**
+
+We can't change how postgres or stripe APIs or ... works, but we can change how our system interacts with it. So our code would be system A and postgres
+or stripe is the system B. We can't change B, but we can change A and verify that it works with B correctly.
+
+Sometimes you own both A and B. So B might be a package or service or sth that you own and run yourself. But for the purpose of
+the integration test and from your perspective, you should assume that B is a working system and it's working as intended and we **can't**
+change it. And this makes it easier when integration test start to fail, usually you know that the system B(system we can't change) is not
+where the bugs are gonna be, **usually the bugs are gonna be in the system that you can change**. This is not always true though. But the
+system that you're not supposed to change, should have it's own test suite, so if it does break or has a bug,
+you should find that about it from another set of tests somewhere else.
+
+- EX 1: I'm testing interactions between my PaymentService and Stripe, and I can't change the way Stripe's API behaves.
+- EX 2: Testing your DB code with the `database/sql` package and a real DB.
+
+Note: It depends on the lang, but in go, it's very common advice that when you're testing your UserStore(repositories) or sth that interacts
+with the DB, instead of mocking the DB, it's almost always better just to use a real DB.
+
+The reason this advice generally is good, is yes it will slow down your tests, but the fact that that integration test is verifying that it all
+works correctly and it does what we expect, is enough of a benefit to us that it's worth that slow down.
+
+So keep using the real DB when testing repositories, until you get to a point where it doesn't cale anymore and when you hit that point,
+that's where we can look into maybe mocking out some of the slower tests and maybe have a separate test suite for slower integration tests
+that you know are slower but you don't have to run all the time.
 
 ## 056 End-to-end tests
 
