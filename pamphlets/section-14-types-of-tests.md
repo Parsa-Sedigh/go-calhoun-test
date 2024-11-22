@@ -162,5 +162,48 @@ that's where we can look into maybe mocking out some of the slower tests and may
 that you know are slower but you don't have to run all the time.
 
 ## 056 End-to-end tests
+Tests the entire app, or most of it.
+
+There can be a fuzzy line between integration and e2e. What happens if we test say 3 packages but not the whole app? 
+Sounds like integration, but what if our app is only 4 packages total? TL;DR - the idea is more important than actually having
+a concrete separation.
+
+EX1: Code to ...
+1. start your app
+2. open up chrome
+3. navigate to your app
+4. login as a user would(entering data in forms)
+5. and ...
+
+- Great for simulating real user scenarios 
+- Great for catching bugs - touches a ton of code
+
+Could even involve MULTIPLE SYSTEMS; eg we could spin up an app with 3 DBs and while fake users interact with the system, we could
+kill a DB to see that it all works as expected.
+
+For example, in integration, we insert a user in DB and then start testing, but in e2e we start the app, open up chrome and use chrome to
+create a user and login and ... .
+
+### Cons
+Not always great at pointing at WHY those bugs occurred or how to fix them(because it's perspective is from a real world user).
+You can figure it out, but they don't tell you quickly and clearly.
+
+Joke ex(both e2e & integration): Two doors both work in isolation, but put the two together and suddenly the doorknobs block each other
+from opening!
 
 ## 057 Which test type should I use
+Short version: A mixture of all of them. The exact ratio will vary from team to team and project to project.
+
+Every type of test has a tradeoff. Figure out which tradeoffs make sense for your team/project. Do this with trial and error and/or
+experience.
+
+Why not just one type?
+
+All unit means we don't test how a system works when put together. It would be like testing each piece of car - the tiers,
+engine, ignition, etc - but not testing the final car once assembled.
+
+Integration tests help make sure different parts work together - eg that steering works with the tires on the car - but 
+doesn't verify the whole works.
+
+e2e verifies the whole car works, but require us to have an entire car assembled and working to test it. It is also
+less obvious what is broken if the car doesn't start.
