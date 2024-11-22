@@ -105,3 +105,43 @@ Although you can export types in `export_test.go` to be used in external tests, 
 in the external tests.
 
 ## 052 When to use internal tests
+Anytime you can't use external test, you can use internal testing.
+
+1. let's sat in export_test.go we have: `var A = a`. Now we can't assign `a` variable to a new variable or change that `a` var.
+For example maybe we want a pointer to `a`. There are some workarounds but at the end, it's easier to write an internal test
+that can access `a`. Note that this is an example of global state and it's not recommended. So we should generally avoid this point.
+2. Let's say you wanna test a func that uses `os.Create()` and it's creating a file in a location that we don't want, but we can't
+change it because it's hard coded. So it's creating a file in a location that we don't have access to, when we run our test. For example,
+in our test, we wanna create the image in a tmp directory. But we can't do that. A common strategy for this, is to instead of
+using os.Create() in the source code, they write: `var osCreate = os.Create` and call `osCreate()` in the source code. Now in the
+internal test, we can say:
+
+```go
+package draw // since we're writing internal test, we're in the same package as the source code we wanna test
+
+import "testing"
+
+func TestFib(t *testing.T) {
+	// overwrite osCreate var
+	osCreate = func(name string) (*os.File, error) {
+		// mocked version of os.Create()
+
+		name = "/some/tmp/dir" + name
+
+		return nil, nil
+	}
+}
+```
+So when we have funcs like os.Create() in the source code and you wanna change it for a test, we can assign the func to a package-level var
+and then overwrite that var in the internal test. Note: This is because funcs are first class vars in go.
+3. another point for using internal test, is external tests can't use private fields or methods of a struct although the struct being exported in `export_test.go`.
+But in internal test, we can use the unexported fields. Note: If you're getting into this situation, it's a sign that you're testing
+things that you shouldn't be and you should stick more to the external testing of that package.
+4. when you wanna test an unexported thing, maybe it's just make sense to write an internal test for them, instead of exporting them
+in `export_test.go`. We don't want to export them even for external tests to use.
+
+So always start with external tests and when you can't use them, write internal tests.
+
+- `xxx_test.go` => external tests
+- `xxx_internal_test.go` => internal tests
+- `export_test.go` => this is used for export unexported stuff
