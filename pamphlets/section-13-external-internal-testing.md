@@ -93,3 +93,15 @@ why you wanna use external tests. To fix the cyclic dep issue when you wanna wri
 that would eventually create a cyclic dep, but by putting it into an external package you can avoid that.
 
 ## 051 Exporting unexported vars funcs and types
+To access unexported vars and funcs in the test, we could use internal tests, but it's better to use them in external tests using a
+trick with an export file named `export_test.go`. The only thing in the naming of that file that matters is ending with `_test` suffix.
+But a convention is to use export_test.go.
+
+**The whole point of that file is not actually provide tests, but it's to take vars and ... that are private to the package x and make them
+accessible for the external tests.** So those exported things are only accessible when we build our tests. So those things are
+only gonna exported for the external tests, not for other source code.
+
+Although you can export types in `export_test.go` to be used in external tests, the private fields of those types still can't be used
+in the external tests.
+
+## 052 When to use internal tests
