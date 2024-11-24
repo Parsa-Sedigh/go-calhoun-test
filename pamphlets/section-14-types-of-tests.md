@@ -207,3 +207,31 @@ doesn't verify the whole works.
 
 e2e verifies the whole car works, but require us to have an entire car assembled and working to test it. It is also
 less obvious what is broken if the car doesn't start.
+
+The problem with e2e tests in addition to be larger and slower, is what happens if the test fails? It's not obvious what's going wrong,
+it's not clear where is the issue.
+
+This is why we use a mixture of both unit, integration and e2e tests - they each serve a purpose and help us verify different things.
+
+Writing only e2e tests is not good because it can be hard to figure out what's causing a specific bug without other types of tests.
+
+Here are some general guidelines. Not always true, bit reasonable guidelines:
+- unit tests tend to be smallest, then integration, then e2e tests
+- smaller = faster; larger = slower
+    - fast can be run more often(on save); slower is run less frequently
+- smaller = more contrived test; larger = more realistic, getting closer to user scenarios 
+- smaller = testing for very specific bugs and it's gonna return specific errors for these bugs; larger = find a variety of bugs
+- smaller = specific errors; larger = vague errors
+
+In short: A good test suite for sth like a web app is often a mixture of these types of tests.
+
+- It's also important to remember that we shouldn't write a test for the sake of writing a test.
+- A test that is unlikely to ever uncover a bug, is not useful. Similarly, a test that uncovers a bug but doesn't help a dev fix it,
+isn't providing much more value.
+- this means the specific type of test is less important than the impact and usability of the test.
+- Finally, try to write tests that aren't flaky however that ends up looking. Eg if writing a unit test requires a ton of mocks and 
+will break with the slightest change, it may make more sense to write an integration test instead. 
+
+A flaky test is one that anytime you change some part of your code, it breaks. When we change the implementation of source code funs,
+the output shouldn't change, it should still return the correct output. But if by changing the implementation, the test fails, that might imply the way we're testing is not right.
+Maybe you need to stop writing unit tests and use integration, maybe because we're mocking too much.
