@@ -23,9 +23,12 @@ func (fl *fakeLogger) Printf(format string, v ...interface{}) {
 
 func TestDemoV3(t *testing.T) {
 	var fl fakeLogger
+
 	logger.DemoV3(fl.Println)
+
 	want := "error in doTheThing():"
 	got := fl.sb.String()
+
 	if !strings.Contains(got, want) {
 		t.Errorf("Logs = %q; want substring %q", got, want)
 	}
@@ -33,9 +36,12 @@ func TestDemoV3(t *testing.T) {
 
 func TestDemoV4(t *testing.T) {
 	var fl fakeLogger
+
 	logger.DemoV4(&fl)
+
 	want := "error in doTheThing():"
 	got := fl.sb.String()
+
 	if !strings.Contains(got, want) {
 		t.Errorf("Logs = %q; want substring %q", got, want)
 	}
@@ -43,13 +49,17 @@ func TestDemoV4(t *testing.T) {
 
 func TestDemoV5(t *testing.T) {
 	var sb strings.Builder
+
 	testLogger := log.New(&sb, "", 0)
 	thing := logger.Thing{
 		Logger: testLogger,
 	}
+
 	thing.DemoV5()
+
 	want := "error opening file: abc.txt"
 	got := sb.String()
+
 	if !strings.Contains(got, want) {
 		t.Errorf("Logs = %q; want substring %q", got, want)
 	}
@@ -57,13 +67,17 @@ func TestDemoV5(t *testing.T) {
 
 func TestDemoV7(t *testing.T) {
 	var sb strings.Builder
+
 	testLogger := log.New(&sb, "", 0)
 	thing := logger.ThingV2{
 		Logger: testLogger,
 	}
+
 	thing.DemoV7()
+
 	want := "error opening file: abc.txt"
 	got := sb.String()
+
 	if !strings.Contains(got, want) {
 		t.Errorf("Logs = %q; want substring %q", got, want)
 	}

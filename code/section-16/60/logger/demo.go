@@ -20,6 +20,7 @@ func DemoGlobal() {
 	}
 }
 
+/* DemoV1 has a dep on logger. If we wanna use DI, the way we change this code, is in DemoV2.*/
 func DemoV1() {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	err := doTheThing()
@@ -28,6 +29,15 @@ func DemoV1() {
 	}
 }
 
+/*
+	Instead of creating the dependency(logger) inside this func, we want the caller to provide it. So this func is not gonna
+
+worry about constructing the dependency on it's own, we want it to be injected(provided) so that it can use it.
+
+So DemoV2 is having logger(dep) injected into it.
+
+Still there's a problem with DemoV2. It requires the caller to pass an EXACT struct(logger) - it's very strict in what it accepts.
+*/
 func DemoV2(logger *log.Logger) {
 	err := doTheThing()
 	if err != nil {
@@ -36,8 +46,9 @@ func DemoV2(logger *log.Logger) {
 }
 
 // Call this with:
-//   logger := log.New(...)
-//   DemoV3(log.Println)
+//
+//	logger := log.New(...)
+//	DemoV3(log.Println)
 func DemoV3(logFn func(...interface{})) {
 	err := doTheThing()
 	if err != nil {
@@ -51,8 +62,9 @@ type Logger interface {
 }
 
 // Call this with:
-//   logger := log.New(...)
-//   DemoV4(logger)
+//
+//	logger := log.New(...)
+//	DemoV4(logger)
 func DemoV4(logger Logger) {
 	err := doTheThing()
 	if err != nil {
