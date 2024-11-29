@@ -13,6 +13,8 @@ As long as it gets a func that it can use for logging, it doesn't care. So the p
 
 **implementation agnostic is achieved through interfaces.**
 
+We can do better by expecting an interface and with this, we no longer care about specific implementation of the dep.
+
 Another upside of using interfaces over concrete types is, when we expect concrete types, it's not clear what we wanna use
 from that type and this makes it harder to use this func that accepts the concrete type. Because the func could do anything
 with that type. This is especially true when the concrete type is complex and has a lot of fields and are hard to set up, we don't need which fields
@@ -62,8 +64,67 @@ But still adding some more code to make the zero values of deps useful, is worth
 We could also make some of the fields of the dep to be private, so now the only time we might want to replace it, is in a test, using
 an internal test.
 
-064 Removing global state with DI
+## 064 Removing global state with DI
+**Note: Global var can be changed anywhere(especially exported ones) and we won't know about it. They can also lead to concurrency issues.**
+We use DI to avoid having global state.
 
-065 Package level functions
+An example of global state in STD is `DefaultServeMux`. There's a Handle func in that package that uses `DefaultServeMux`.
+In STD lib, when they provide global state, it's for simplicity. But there's also the struct version of that global var and you can construct
+it and pass it as DI to methods of that type. So we won't use global state anymore with this approach.
 
-066 Summary of dependency injection
+Summary: Construct a struct type(`Thing` in examples) and inject the deps into it and then use the methods of that type.
+But there are some cases where we can still have global state with a default and ready-to-use value and some package-level funcs 
+that operate on that global state.
+
+## 065 Package level functions
+In 65, look at the `Version` func, We have dep on exec.Command. We need to inject this dep. We could pass in a *exec.Cmd but the caller has to build it and it's tedious.
+Or we could expect a func that returns a *exec.Command but that's still annoying.
+
+**The solution is:** Instead of using dep injection directly, we can use a variable for exec.Command and this is a common technique
+when we're calling package-level funcs like `exec.Command`.
+
+Q: Why we used this unexported package-level var?
+
+A: Because we can write an internal test by overwriting the execCommand variable in that test func. Look at `TestVersion`.
+Now since we have global state, we need a teardown at the end of each test, so that next tests would work with a clean version of that global state.
+
+This was an advantage of using package-level vars that are assigned a function. We can overwrite that package-level var in tests,
+but we need teardown for it.
+
+It is possible to do this without package-level var. We could instead create a type like `Checker`.
+
+By creating a struct and defining methods on it, we avoid having a global state, because each Test func can now construct that
+type and use it's own var instead of a global one. We don't need a teardown anymore.
+
+Start with the first approach(global var that we assign a func to it), then move to defining the type approach.
+
+## 066 Summary of dependency injection
+### DI is not a framework
+While in some languages, like Java, you may use a framework to enable DI, that is not necessary in Go.
+
+DI is a design pattern where we provide deps where they are needed instead of a func constructing them itself.
+
+We typically utilize DI in Go with:
+- interfaces(most common)
+- variables(more restrictive, but we saw this with the `logFn` in DemoV3 example). This could be done by accepting a func as the param.
+
+DI helps us:
+- remove global state(by using types and injecting the deps into those types)
+- write implementation agnostic code
+- write more testable code
+
+DI is useful for testing but that isn't it's sole purpose. DDD and other impl-agnostic patterns are enabled mostly through DI.
+
+DI isn't free. It's usually more code.
+- expecting all deps for each func is less end-user friendly and can seem like a lot of code
+- using structs to make providing deps for a set of methods will reduce code, but does so at the cost of clarity. It's
+less clear which methods need which deps.
+- providing default values with DI can take a bit more work as we saw earlier, but this DOES reduce the mental load on a user of
+your code which is a good thing
+
+Despite the extra work, DI almost always results in a better codebase for large projects.
+- DI makes it easier for many devs to navigate a codebase without understanding the inner workings of it all
+- Impl agnostic means you can ignore inner workings of parts you aren't concerned with
+
+## Further reading
+- [npf.io/2015/06/testing-exec-command]()

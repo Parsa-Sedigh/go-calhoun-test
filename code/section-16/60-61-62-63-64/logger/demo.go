@@ -49,6 +49,8 @@ func DemoV2(logger *log.Logger) {
 //
 //	logger := log.New(...)
 //	DemoV3(log.Println)
+//
+// Calling this func is tedious, that's why there are better versions of this func later
 func DemoV3(logFn func(...interface{})) {
 	err := doTheThing()
 	if err != nil {
@@ -79,6 +81,17 @@ func DemoV4(logger Logger) {
 // 	defaultThing.DemoV5()
 // }
 
+/*
+	Note: With this type, we removed global state. The caller only constructed Thing once and then use it, without any global state.
+
+But we still have state here in this struct in a sense that the fields of this struct could be altered by any methods of this type,
+but the upside is we can only change this type is if we pass Thing struct to it. Other code can't change it unlike the global states which
+any code can change it.
+
+Note: By using a struct type, it makes it easier to set everything once and then call a bunch of methods without having to
+pass in the fields everytime(inject the deps in every single method call), but the cost is giving up a bit of clarity. Since
+the caller doesn't know which fields are gonna be used in which methods of this struct.
+*/
 type Thing struct {
 	Logger interface {
 		Println(...interface{})
