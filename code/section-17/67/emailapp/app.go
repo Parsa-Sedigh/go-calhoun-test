@@ -25,6 +25,15 @@ type EmailClient interface {
 	Welcome(name, email string) error
 }
 
+/*
+	Do not use a concrete type for the email client, like MailgunClient. Instead, use an interface like EmailClient.
+
+If you use concrete types(which would have concrete impl of their methods), that means in tests, there wouldn't be a good way to
+test without actually sending out emails.
+
+Note: If you replace MailgunClient param(dep) with another real implementation, it's not considered mocking at all,
+it's just dep injection and you're just swapping implementations.
+*/
 func Signup(name, email string, ec EmailClient, us *UserStore) (*User, error) {
 	email = strings.ToLower(email)
 	user, err := us.Create(name, email)
