@@ -114,6 +114,15 @@ func TestGitVersion(t *testing.T) {
 ```
 
 ## 069 Why do we mock
+Mocking is used for many different reasons.
+
+We gotta evaluate: Is it worth it to not use the real impl in this test and to not have a 100% certainty that it's gonna work with the real thing?
+Because anytime we use a mock, there's no guarantee that the mock is able to simulate what the real impl is gonna do. There's always gonna be
+assumptions, because we're not using the real impl, we're using it's mock. So it's a tradeoff between not using the real impl in order to
+being able to test sth. If we don't mock it, testing would be hard or impossible, but with this, we would loose the certainty that the 
+real impl gonna work.
+
+### Common situations we might wanna use mocking
 Mocking is almost always done to simplify testing, or to make testing possible.
 
 - setup/teardown may be simpler
@@ -125,9 +134,99 @@ Mocking is almost always done to simplify testing, or to make testing possible.
 Let's look at some examples to understand this better.
 
 ### simulate specific situation
+`twg/race_pass/users_test.go` - we use a fake implementation that wraps a real UserStore in `racyUserStore` in order to simulate a very specific race condition.
+It actually has the real impl as the embedded struct, but we're using it to send a specific behavior, so this is one of the cases where our
+mock is actually more complex than the real impl, because it includes the real impl and some other stuff.
+Look at 29/race_pass folder.
+
+Simulating a specific behavior or other types of errors that are hard to encounter in real impl, but you wanna make sure that your code handles it
+correctly. You can use mocks for simulating these errs.
 
 ### setup/teardown
+We saw how we can create a real DB and we can even seed it with real info. This is a good bit of setup/teardown in `twg/psql/users_test.go`.
 
+Sometimes a test doesn't really need this all to actually test sth. Eg our signup code from earlier:
+
+```go
+package main
+
+import "strings"
+
+func Signup(name, email string, ec EmailClient, us *UserStore) error {
+	email = strings.ToLower(email)
+	user, err := us.Create(name, email)
+	if err != nil {
+		return err
+    }
+	
+	if err := ec.Welcome(name, email); err != nil {
+		return err
+    }
+	
+	return nil
+}
+```
+Setting up a real DB for this example might be overkill. Instead, it's easier to create a stub for this UserStore and to have it return
+a fake user or err(whenever we want to) and then we can test both scenarios easily, we don't have to create a user that already exist
+with duplicate email in order to simulate what happens when user wants to register with an already existing email. Mocks help us with this.
+
+We can mock out the UserStore entirely and avoid any SQL setup - we just return a user when we want to test a successful situation and
+return an err when we want to test an error case.
+
+So mocks make testing specific behavior and errs easier and also the setup and seeding it and teardown it all down when 
+you're done and ... is no longer necessary because we mock parts of it.
+
+### External APIs
+Email clients like we saw earlier are similar, but imagine you're using an API to order postage labels for your packages.
+
+What happens if the shipping company doesn't offer a test API, so you can't actually run tests with that API integration? **We use mocking!**
+
+Or a test env may exist but doesn't perfectly match production(happens more often that you'd guess).
+
+Or test env has limitations and can't be hit as often as devs are hitting tests.
+Or using a real API is just too slow and you don't want that many network calls. Or we want our tests to runnable without using internet
+for using 3rd party APIs which require internet conn and we don't want the go test to sit there and halt because it doesn't have internet conn.
+
+### We can verify that specific behavior occurs
+Signup example again:
+```go
+package main
+
+import "strings"
+
+func Signup(name, email string, ec EmailClient, us *UserStore) error {
+	email = strings.ToLower(email)
+	user, err := us.Create(name, email)
+	if err != nil {
+		return err
+	}
+
+	if err := ec.Welcome(name, email); err != nil {
+		return err
+	}
+
+	return nil
+}
+```
+
+We might use mocking and an actual mock which is one that tracks which methods are called to verify that we actually call the
+Welcome() method in some situations but DO NOT in others.
+
+*Warning: The type of testing with mocks where we actually verify that specific method is called, is very close to
+testing HOW a func implemented rather than that it does what it is supposed to do, so use the technique with caution.*
+
+Most of the time when we write good tests, it's about verifying that the end result is what we wanted and we don't care about
+how it happened. Example: If have a sort func, we don't necessarily care about the algo it's using(how it's implemented),
+it's not important detail, instead in test we care about the result being sorted.
+
+The problem with testing implementation details, anytime we make a change to the func, all of the tests fail and that starts
+to make tests useless and the result is we stop caring about those tests(they don't provide much value anymore).
+
+### Summary
+We use mocks when the real thing just doesn't make practical sense. Whether it's gonna make the tests simpler or possible.
+
+*Caution: Mocks can differ from the real thing so it can lead to tests passing with mocks but there is a bug. Integration tests
+are still recommended, even with mocking.*
 
 070 Third party packages
 071 Faking APIs
