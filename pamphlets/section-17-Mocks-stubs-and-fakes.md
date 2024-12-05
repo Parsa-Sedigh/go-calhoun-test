@@ -228,5 +228,22 @@ We use mocks when the real thing just doesn't make practical sense. Whether it's
 *Caution: Mocks can differ from the real thing so it can lead to tests passing with mocks but there is a bug. Integration tests
 are still recommended, even with mocking.*
 
-070 Third party packages
-071 Faking APIs
+## 070 Third party packages
+Really anything that can generate an interface impl:
+- github.com/josharian/impl (+ vim-go-impl)
+- github.com/golang/mock
+- github.com/martyer/moq
+- vscode: `cmd + p` then `go generate interface stubs`, then type in this format: <receiver of methods> <what type it's gonna implement>, like: 
+`d *DemoImpl github.com/joncalhoun/twg/race_pass.UserStore`. Then you have to define the type itself, like: `type DemoImpl struct{}`.
+
+Those impls are mocks.
+
+You can also make your type impl a type by **embedding** another type that impls that interface.
+
+## 071 Faking APIs
+- Option 1: use mocking and replace the client that interacts with that API.
+- Option 2: Spin up a fake server locally and update the client to use that server
+
+Both options have merit and neither fully replace integration testing. The latter just allows you to use the client code explicitly.
+
+let's look at option2. Imagine we had some API client: [github.com/joncalhoun/twg/stripe/v0]()
