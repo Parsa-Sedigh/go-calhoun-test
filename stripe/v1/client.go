@@ -22,6 +22,9 @@ type Client struct {
 	baseURL string
 }
 
+// Note: Instead of having BaseURL method on Client, we could define a NewClient func that returns *Client and sets the baseURL.
+// Either way, we wanna have a way to set the baseURL unexported field.
+
 func (c *Client) BaseURL() string {
 	if c.baseURL == "" {
 		return "https://api.stripe.com"

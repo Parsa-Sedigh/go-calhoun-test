@@ -13,6 +13,7 @@ func TestApp(t *testing.T) {
 	defer teardown()
 
 	mux.HandleFunc("/v1/charges", func(w http.ResponseWriter, r *http.Request) {
+		// the response is written to w using Fprint()
 		fmt.Fprint(w, `{"id":"ch_1DEjEH2eZvKYlo2CxOmkZL4D","amount":2000,"description":"Charge for demo purposes.","status":"failed"}`)
 	})
 

@@ -240,10 +240,38 @@ Those impls are mocks.
 
 You can also make your type impl a type by **embedding** another type that impls that interface.
 
-## 071 Faking APIs
+## 071 Faking APIs(any other services you wanna communicate with)
+Let's fake clients that we use to connect to external services.
+
 - Option 1: use mocking and replace the client that interacts with that API.
 - Option 2: Spin up a fake server locally and update the client to use that server
 
+Let's see option 1 in action.
+
+Look at demov0. We wanna take the stripe client in stripe/demov0 and make it so that we can test it without actually hitting the stripe API.
+The solution is in v1.
+
+In client.go, we added a `baseURL` field to the client struct.
+
 Both options have merit and neither fully replace integration testing. The latter just allows you to use the client code explicitly.
 
-let's look at option2. Imagine we had some API client: [github.com/joncalhoun/twg/stripe/v0]()
+let's look at option2. Imagine we had some API client: [github.com/joncalhoun/twg/stripe/v0]().
+
+Note: client_test.go is the tests for client.go.
+
+We can easily simulate different scenarios with our local fake server by returning the json we want from there to the client.
+
+This is similar to using a mock obj for the client we wanna test, except we're using a mock **server** that our client is using it.
+
+Note: The reason we have TestClient func in a source code file(testing.go) not a test file (_test.go) in `_test` package which would make
+it and is available to anyone using stipe client, is so that it would appear in the docs, is in addition to writing unit test using
+this technique, is we can have sth like the code in `demov1`. In `demo_test.go`, we have App struct with Run() method that runs the whole app
+and we wanna run some e2e tests or ... with it. We can setup our `App` to use fake stripe client and server returned by `TestClient` func.
+Then we can modify returned mux to return whatever we want.
+
+With this, we can run e2e tests(entire app) but we can still mock things when we want to.
+
+So we provide a fake client for others to use in their real code as well without them having to write an interface to replace what 
+your code will actually be doing.
+
+We can also record http reqs.

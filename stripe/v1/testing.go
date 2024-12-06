@@ -12,6 +12,8 @@ func TestClient(t *testing.T) (*Client, *http.ServeMux, func()) {
 	c := &Client{
 		baseURL: server.URL,
 	}
+
+	// returning func is a teardown func
 	return c, mux, func() {
 		server.Close()
 	}
