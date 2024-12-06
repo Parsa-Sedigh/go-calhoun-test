@@ -7,7 +7,7 @@ type User struct {
 	Email string
 }
 
-// Errors returned by the UserStore
+// Errors returned by the UserStore. Any impl of UserStore can utilize.
 var (
 	ErrNotFound   = errors.New("user not found")
 	ErrEmailTaken = errors.New("email is taken")

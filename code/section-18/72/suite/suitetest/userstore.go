@@ -17,6 +17,8 @@ func (uss *UserStoreSuite) All(t *testing.T) {
 	UserStore(t, uss.UserStore, uss.BeforeEach, uss.AfterEach)
 }
 
+/* note: We didn't name this func TestUserStore, although it's testing UserStore. That's because the name of this package already
+has test in it(suitetest). But if you put this func in the same package as the type(UserStore), we would name it TestUserStore.*/
 // suitetest.UserStore
 func UserStore(t *testing.T, us suite.UserStore, beforeEach, afterEach func()) {
 	_, err := us.ByID(123)

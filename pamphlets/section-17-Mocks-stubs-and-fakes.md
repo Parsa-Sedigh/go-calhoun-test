@@ -265,9 +265,11 @@ This is similar to using a mock obj for the client we wanna test, except we're u
 
 Note: The reason we have TestClient func in a source code file(testing.go) not a test file (_test.go) in `_test` package which would make
 it and is available to anyone using stipe client, is so that it would appear in the docs, is in addition to writing unit test using
-this technique, is we can have sth like the code in `demov1`. In `demo_test.go`, we have App struct with Run() method that runs the whole app
+this technique, we can have sth like the code in `demov1`. In `demo_test.go`, we have App struct with Run() method that runs the whole app
 and we wanna run some e2e tests or ... with it. We can setup our `App` to use fake stripe client and server returned by `TestClient` func.
 Then we can modify returned mux to return whatever we want.
+
+We put it in a source code file so the users of the stripe client can use this fake client and it's server it's gonna interact with, in their test(_test.go files).
 
 With this, we can run e2e tests(entire app) but we can still mock things when we want to.
 
