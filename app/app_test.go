@@ -39,12 +39,15 @@ func TestApp_v1(t *testing.T) {
 		t.Fatalf("GET / err = %s; want nil", err)
 	}
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Errorf("ioutil.ReadAll() err = %s; want nil", err)
 	}
+
 	got := string(body)
 	want := "<h1>Welcome!</h1>"
+
 	if got != want {
 		t.Errorf("GET / = %s; want %s", got, want)
 	}
