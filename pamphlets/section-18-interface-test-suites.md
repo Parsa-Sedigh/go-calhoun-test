@@ -75,6 +75,33 @@ func TestUserStore(t *testing.T) {
 }
 ```
 
-073 Interface test suite setup and teardown
+## 073 Interface test suite setup and teardown
+We're gonna look at techniques to manage setup and teardown whenever each implementation of the interface might have it's own unique sets of
+things that need setup and teardown.
 
-074 Interface test suites in the wild
+### Approach 1
+It's good to do the setup and teardown in test suite. So that when people are using that test suite, don't have to pass in to this
+test suite, extra funcs or things to make that work. The test suite func can do this using defer funcs.
+In the test suite func, we can put the setup and teardown next to each other.
+
+### Approach 2
+The first approach can be tricky sometimes. Because:
+
+There's no guarantee that a UserStore(interface we're testing) might not have side effects that we don't know about. And maybe
+the test suite func don't really care about this necessarily. As long as it impl the interface we're fine. But still it might be useful
+to give the client that is using this test suite, a chance to handle teardown between test cases. For example in the case of testing
+a UserStore in the test suite func, while Delete()ing that user in test might do the teardown, there could be some weird scenarios
+where it's just easier to completely wipe the DB before we run a new series of tests.
+
+So we need to provide a custom way to setup or teardown a test.
+
+To support setup and teardown, there are multiple ways.
+
+1. We could add more params to the test suite func(`UserStore` in `userstore.go`). Params like beforeEach, afterEach that are funcs.
+Note: People could pass nil as those args, so we need to check them not being nil.
+2. Create a `type UserStoreSuite struct{}`. It has fields for the actual interface we wanna test + beforeEach and afterEach funcs.
+Then we can have a method called `All()` for running all the tests of the test suite. This way, if we you don't want to set extra
+opts like beforeEach and ..., it's easier than having to pass nil. So if you start having to support a bunch of fields, you can create
+a struct to pass those fields and have the test suite run via some method like `All()`.
+
+## 074 Interface test suites in the wild
