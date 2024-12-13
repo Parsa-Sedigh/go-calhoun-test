@@ -105,3 +105,29 @@ opts like beforeEach and ..., it's easier than having to pass nil. So if you sta
 a struct to pass those fields and have the test suite run via some method like `All()`.
 
 ## 074 Interface test suites in the wild
+- `x/net/nettest`: <https://github.com/golang/net/blob/master/nettest/conntest_g017-go#L11>: There's a Conn interface in net package.
+If you(as a client) wanna impl this interface, there's a lot of details that could go wrong in your impl. In order to make sure you
+have implemented that interface correctly and as expected, they provide a nettest package. It has the TestConn func. It's a test suite that goes ahead and run
+through a large series of test cases. The second param of that test suite func is interesting because it's not a `net.Conn`(which is what we were
+expecting, since we wanna pass in our impl of net.Conn to test it). So you see we're not passing a single net.Conn to that test suite func.
+This is because: For `net.Conn` to work, you need 2 connections that maybe communicate to each other or ... . MakePipe is a func that creates a
+connection between two endpoints and then return the pairs(the two conns that it created) so that it can use these connections to run the tests.
+So instead of having to pass in a beforeEach and afterEach funcs, the MakePipe func is gonna do all the beforeEach(setup) work and then it returns a
+stop func which is all the teardown work. So instead of having to pass all those before and after funcs, we just pass in a func that can handle
+giving it all the info it needs for each individual test case(we're talking about MakePipe func).
+- `github.com/hashicorp/go-getter`: uses arguments approach: <https://godoc.org/github.com/hashicorp/go-getter#TestDecompressor>
+- Caddy:
+    - uses struct approach: <https://godoc.org/github.com/mholt/caddy/caddytls/storagetest#StorageTest>.
+    Note: The methods of `StorageTest`, allow us to determine which tests we care about running. We can test all funcs using `AllFuncs` method,
+    `TestMostRecentUserEmail`, `TestUser` and ... . Some of them might run a couple of tests, some only one test and ... . So you can very
+    specifically choose which things you wanna test.
+    - <https://github.com/mholt/caddy/blob/053373a38519d8cdf4ee7582ed9dc6ce239597cc/caddytls/storagetest/memorystorage_test.go#L19> 
+    - <https://github.com/mholt/caddy/blob/053373a38519d8cdf4ee7582ed9dc6ce239597cc/caddytls/storagetest/storagetest_test.go#L31>
+- Vice: <https://github.com/matryer/vice/blob/master/vicetest/test.go>. The Transport func takes a func in order to pass it the interface
+we wanna test, so we can do some setup there as well, but there's no option for teardown. Even if we use a defer in that passed func,
+it won't work correctly because it would get executed as soon as the passed func gets done, not before each test or ... .
+
+The best use of the interface test suites is for when we're making pkgs or libs that other devs would use and they need to provide
+their own impls of interfaces that we expect. When that's happening, these test suites are great way to making it easier for those 
+people to verify that their implementation is correct and it satisfies all of our needs without having to dig into the source code
+and see all of the different things that you do with that interface.
