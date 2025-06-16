@@ -5,8 +5,13 @@ import (
 	"time"
 )
 
+// We wanna test when we save a user, UpdatedAt is set to the current time.
+
 func TestSaveUser(t *testing.T) {
 	now := time.Now()
+
+	/* Here, we're overwriting the global timeNow variable. With this, we're always returning the same `now` variable everytime
+	this func is called. So the returned val will be the same. So we will have deterministic test.*/
 	timeNow = func() time.Time {
 		return now
 	}

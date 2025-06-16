@@ -13,6 +13,8 @@ var (
 	ErrExceededMaxTries = errors.New("timing: exceeded max tries")
 )
 
+// PollUntil receives a func that does some logic and it's gonna call this func every second until that func returns true.
+// It calls this func based on maxTries param.
 func PollUntil(fn func() bool, maxTries int) error {
 	for i := 0; i < maxTries; i++ {
 		timeSleep(1 * time.Minute)
