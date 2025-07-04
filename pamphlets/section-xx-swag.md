@@ -45,3 +45,16 @@ Why we start at leaf-level packages?
 
 1. we can avoid writing big e2e tests because they're hard to set up and they're fragile and flaky
 2. we could have hard-coded configs
+
+## 128 Initial db tests
+Note: Calling `panic()` inside `init()` won't terminate the program.
+
+Note: The price col is of type int and it's in cents. So price set to 1000 means 10$.
+
+Before making changes in db pkg, we wrote a test to make sure we don't break anything there as we refactor it. db_test.go is the test.
+
+## 129 Creating the dbOpen function
+Create the Open() func in db pkg.
+
+Instead of format `host=x port=y ...` for psql conn, use `postgres://<user>:<pass>...`, because in the second one, people
+can just provide **one** env var vs a bunch.
