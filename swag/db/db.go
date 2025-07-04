@@ -2,32 +2,43 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
+	"os"
 	"time"
 )
 
 var (
-	DB *sql.DB
+	dbURL string
+	DB    *sql.DB
 )
 
-const (
-	host    = "localhost"
-	port    = "5432"
-	user    = "parsa"
-	dbName  = "swag_dev"
-	sslMode = "disable"
-)
+const DefaultURL = "postgres://postgres:postgres@127.0.0.1:5432/swag_dev?sslmode=disable"
 
 func init() {
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=%s", host, port, user, dbName, sslMode)
+	dbURL = os.Getenv("PSQL_URL")
+	if dbURL == "" {
+		dbURL = DefaultURL
+	}
 
-	db, err := sql.Open("postgres", psqlInfo)
+	// if we haven't closed the conn, close it
+	if DB != nil {
+		DB.Close()
+	}
+
+	Open(dbURL)
+}
+
+// Open will open a database connection using the provided postgres URL.
+// Be sure to close this using db.DB.Close func.
+func Open(psqlURL string) error {
+	db, err := sql.Open("postgres", psqlURL)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// be sure to close the DB!
 	DB = db
+
+	return nil
 }
 
 type Campaign struct {
