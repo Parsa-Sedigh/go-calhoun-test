@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"os"
 	"time"
 )
 
@@ -11,20 +10,10 @@ var (
 	DB    *sql.DB
 )
 
-const DefaultURL = "postgres://postgres:postgres@127.0.0.1:5432/swag_dev?sslmode=disable"
+const defaultURL = "postgres://postgres:postgres@127.0.0.1:5432/swag_dev?sslmode=disable"
 
 func init() {
-	dbURL = os.Getenv("PSQL_URL")
-	if dbURL == "" {
-		dbURL = DefaultURL
-	}
-
-	// if we haven't closed the conn, close it
-	if DB != nil {
-		DB.Close()
-	}
-
-	Open(dbURL)
+	Open(defaultURL)
 }
 
 // Open will open a database connection using the provided postgres URL.
@@ -91,4 +80,96 @@ func GetCampaign(id int) (*Campaign, error) {
 	}
 
 	return &camp, nil
+}
+
+type Customer struct {
+	Name  string
+	Email string
+}
+
+type Address struct {
+	Street1 string
+	Street2 string
+	City    string
+	State   string
+	Zip     string
+	Country string
+
+	// In case the format above fails
+	Raw string
+}
+
+type Payment struct {
+	Source     string
+	CustomerID string
+	ChargeID   string
+}
+
+type Order struct {
+	ID         int
+	CampaignID int
+	Customer   Customer
+	Address    Address
+	Payment    Payment
+}
+
+func CreateOrder(order *Order) error {
+	statement := `
+insert into orders (
+                    campaign_id,
+                    cus_name, cus_email,
+                    adr_street1, adr_street2, adr_city, adr_state, adr_zip, adr_country,
+                    adr_raw,
+                    pay_source, pay_customer_id, pay_charge_id
+)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+returning id`
+
+	if err := DB.QueryRow(statement,
+		order.CampaignID,
+		order.Customer.Name,
+		order.Customer.Email,
+		order.Address.Street1,
+		order.Address.Street2,
+		order.Address.City,
+		order.Address.State,
+		order.Address.Zip,
+		order.Address.Country,
+		order.Address.Raw,
+		order.Payment.Source,
+		order.Payment.CustomerID,
+		order.Payment.ChargeID,
+	).Scan(&order.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetOrderViaPayCus(payCustomerID string) (*Order, error) {
+	statement := `
+	select * from orders
+    where pay_customer_id = $1`
+
+	row := DB.QueryRow(statement, payCustomerID)
+
+	var order Order
+	if err := row.Scan(
+		&order.CampaignID,
+		&order.Customer.Name,
+		&order.Customer.Email,
+		&order.Address.Street1,
+		&order.Address.Street2,
+		&order.Address.City,
+		&order.Address.State,
+		&order.Address.Zip,
+		&order.Address.Country,
+		&order.Address.Raw,
+		&order.Payment.Source,
+		&order.Payment.CustomerID,
+		&order.Payment.ChargeID); err != nil {
+		return nil, err
+	}
+
+	return &order, nil
 }

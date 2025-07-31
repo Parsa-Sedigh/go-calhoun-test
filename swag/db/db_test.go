@@ -2,9 +2,26 @@ package db_test
 
 import (
 	"github.com/Parsa-Sedigh/go-calhoun-test/db"
+	"os"
 	"testing"
 	"time"
 )
+
+const defaultURL = "postgres://postgres:postgres@127.0.0.1:5432/swag_test?sslmode=disable"
+
+func init() {
+	testURL := os.Getenv("PSQL_URL")
+	if testURL == "" {
+		testURL = defaultURL
+	}
+
+	// if we haven't closed the conn, close it
+	if db.DB != nil {
+		db.DB.Close()
+	}
+
+	db.Open(testURL)
+}
 
 // At this stage, we just want to verify that any changes that we make aren't breaking CreateCampaign func.
 func TestCreateCampaign(t *testing.T) {

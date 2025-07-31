@@ -58,3 +58,32 @@ Create the Open() func in db pkg.
 
 Instead of format `host=x port=y ...` for psql conn, use `postgres://<user>:<pass>...`, because in the second one, people
 can just provide **one** env var vs a bunch.
+
+So **it's good to use a real DB in tests**.
+
+## 130 What about mocks
+When we're interacting with dbs in tests, it's more integration test not unit test.
+
+go-sqlmock is a lib that is essentially a driver for sql where it provides a mock for all of that.
+
+We need to test db as well because the mocks won't verify the query itself.
+
+We want integration tests anyway, if integration tests are enough, we're confident that the code won't break, so less need for unit tests.
+
+## 131 Test harnesses and helpers
+We can use fixtures or some sort of DB seeding for when we need some data to be in DB before every testcase.
+
+---
+
+One approach to clean the DB between testcases, is to run every testcase runs inside a tx, so it can rollback the entire tx after
+the testcase is run, so we can continue other testcases. This is faster than wiping the whole db or redo the whole thing.
+But the drawback is when we're running inside of a tx, sometimes things won't work exactly the same as they might in normal scenarios like
+inside your own tx instead of frameworks tx that is run per testcase.
+
+So using a tool for cleaning every testcase is probably overkill.
+
+Let's set up a test harness(our own mini testing framework).
+
+We're gonna set sth up that allows us to wipe the DB before every test and wipe it after every test just to make sure that everything is clear.
+
+## 132 Reviewing tests
