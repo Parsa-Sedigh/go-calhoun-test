@@ -86,4 +86,12 @@ Let's set up a test harness(our own mini testing framework).
 
 We're gonna set sth up that allows us to wipe the DB before every test and wipe it after every test just to make sure that everything is clear.
 
+In a lot of tests we wanna do similar things like reset the DB. So we could write a func for this and call it in every testcase.
+But we can also use test harness instead. But right now a test harness won't be a lot helpful, but later it will be.
+
+For this, write a before or setup func(we named it setup).
+
+Create `TestCampaigns` func.
+
+
 ## 132 Reviewing tests
