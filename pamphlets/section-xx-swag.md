@@ -67,6 +67,8 @@ When we're interacting with dbs in tests, it's more integration test not unit te
 go-sqlmock is a lib that is essentially a driver for sql where it provides a mock for all of that.
 
 We need to test db as well because the mocks won't verify the query itself.
+But remember that testing specific scenarios is hard when having real DBs. An example of where testing a scenario with real DB is hard,
+is: What happens if we call GetCampaign one second before expiring or after? Well yeah we can stub the time part but still is hard.
 
 We want integration tests anyway, if integration tests are enough, we're confident that the code won't break, so less need for unit tests.
 
@@ -93,5 +95,21 @@ For this, write a before or setup func(we named it setup).
 
 Create `TestCampaigns` func.
 
-
 ## 132 Reviewing tests
+Instead of having package-level funcs for db, create a type and move those funcs as methods.
+The reason for this is, right now each func there uses a global db var without any dependency injection. By using methods
+on a type that has all the deps, testing would be easier.
+
+The only way we can still test the code that doesn't use dep injection is to overwrite global vars with the val we want in the test.
+The drawback is we have to run all the tests one at a time, because otherwise a test might overwrite that global var and it would
+become invalid for next tests(so we have to add code for cleaning up after each test).
+
+Instead of all these hacks, create methods instead of package-level funcs and with this we utilize dep injection.
+
+NOTE: If each individual testcase needs a set of dynamic data, we can use a func in the table driven tests to set up that data.
+
+133 Testing specific times
+134 First pass at refactoring the db pkg
+135 Updating db tests
+136 Testing the order flow
+137 Extracting code for unit testing
